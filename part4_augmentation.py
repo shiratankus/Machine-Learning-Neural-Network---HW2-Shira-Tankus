@@ -9,8 +9,8 @@ start_time = time.perf_counter()
 def process_batch(X, y, model, sd, size, start, end, k, seed):
     '''Generate random indices, make predictions and calculate accuracy scores'''
     rng = np.random.default_rng(seed)
-    b = end - start # batch size
-
+    b = end - start # actual batch size (accounts for a smaller final batch)
+    
     # Random sampling
     random_indices = rng.choice(len(X), size=(b, size))
     X_sample = X[random_indices]
@@ -21,7 +21,7 @@ def process_batch(X, y, model, sd, size, start, end, k, seed):
     # Predict all samples in the batch
     preds = model.predict(X_augmented.reshape(-1, X.shape[1])).reshape(b, size)
 
-    # Calculate accuracy and F1-score
+    # Calculate accuracy and F1-score using vectorization to minimize computational cost
     accuracies = np.mean(y_sample == preds, axis=1)
 
     tp = np.sum((y_sample == 1) & (preds == 1), axis=1)
@@ -104,7 +104,6 @@ augment_accuracies, augment_f1, augments = data_augmentation(X_circular, y_circu
 print(f"Mean accuracy: {np.mean(augment_accuracies):.4f}")
 print(f"Mean F1-score: {np.mean(augment_f1):.4f}")
 
-
 # Plot two augmentations
 fig, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
 
@@ -115,7 +114,7 @@ axes[0].set_ylabel("$X_2$")
 axes[1].tick_params(labelleft=False)
 
 plt.tight_layout()
-plt.savefig("augmented_datasets_numpy_batch.png", dpi=300)
+plt.savefig("augmented_datasets.png", dpi=300)
 plt.close()
 
 print(f"Total runtime: {time.perf_counter() - start_time:.2f} seconds")
